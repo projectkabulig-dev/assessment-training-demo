@@ -539,7 +539,7 @@ function viewAdmin(d){
     <div class="card">
       <span class="tag">FACILITATOR</span>
       <h1>Item Analysis</h1><p class="lead">${esc(d.settings.title)}</p>
-      <div class="row"><button class="btn primary" onclick="loadAdmin(sessionStorage.getItem('kabulig_admin_key'))">I-refresh</button><button class="btn ghost" onclick="exportCSV()">I-download (CSV)</button><button class="btn ghost" onclick="sessionStorage.removeItem('kabulig_admin_key');viewIntro()">Lumabas</button></div>
+      <div class="row"><button class="btn primary" onclick="loadAdmin(sessionStorage.getItem('kabulig_admin_key'))">I-refresh</button><button class="btn gold" onclick="makePPT(this)">I-download ang PowerPoint</button><button class="btn ghost" onclick="exportCSV()">I-download (CSV)</button><button class="btn ghost" onclick="sessionStorage.removeItem('kabulig_admin_key');viewIntro()">Lumabas</button></div>
     </div>
     <div class="card"><h2>Buod</h2>
       <div class="kpis">
@@ -576,6 +576,362 @@ function viewAdmin(d){
   </div>`;
   window.__adminData = d;
 }
+
+const PPTX_CDN='https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js';
+function toast(msg,ms){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0b2a4a;color:#fff;padding:12px 18px;border-radius:14px;font-size:14px;z-index:99;max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+  t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),ms||3500);
+}
+function loadPptx(){
+  return new Promise((res,rej)=>{
+    if(window.PptxGenJS) return res();
+    const sc=document.createElement('script'); sc.src=PPTX_CDN; sc.onload=()=>res(); sc.onerror=()=>rej(new Error('hindi ma-load ang library')); document.head.appendChild(sc);
+  });
+}
+async function makePPT(btn){
+  const d=window.__adminData;
+  if(!d||!d.responses||!d.responses.length){ toast('Wala pang resulta. Hintayin munang may magsumite, tapos i-refresh.'); return; }
+  const old=btn.textContent; btn.disabled=true; btn.textContent='Ginagawa ang PowerPoint...';
+  try{
+    await loadPptx();
+    const pptx=new PptxGenJS();
+    buildDeck(pptx,d,{analyze,mastery,byCompetency,byDistrict});
+    await pptx.writeFile({fileName:'ELLNA_Numeracy_SetB_Results_'+new Date().toISOString().slice(0,10)+'.pptx'});
+    toast('Na-download na ang PowerPoint.');
+  }catch(e){ toast('Hindi nagawa. Kailangan ng internet para sa PowerPoint generator. ('+(e&&e.message||e)+')',7000); }
+  btn.disabled=false; btn.textContent=old;
+}
+
+/* ---------- POWERPOINT GENERATOR (PptxGenJS, naglo-load lang kapag pinindot ang button) ---------- */
+function buildDeck(pptx, d, H){
+  const NAVY='0B2A4A', BLUE='145A8A', TEAL='0FA3A3', GOLD='F7B733', INK='14263B', MUTED='5B6B80',
+        TINT='EAF4FB', SOFT='F4F8FC', LINE='D9E3EE', WHITE='FFFFFF', FONT='Calibri';
+  const hx = c => String(c).replace('#','').toUpperCase();
+  const tr = (s,m) => { s=String(s==null?'':s).replace(/\s+/g,' ').trim(); return s.length>m ? s.slice(0,m-1).trimEnd()+'…' : s; };
+  const f1 = x => (Math.round(x*10)/10).toFixed(1);
+  const pc = x => Math.round(x);
+  const plural = (k,w,ws) => k+' '+(k===1?w:(ws||w+'s'));
+  const listAnd = a => a.length<=1 ? a.join('') : a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+  const ABBR = {'Mastered':'M','Closely Approximating Mastery':'CAM','Moving Towards Mastery':'MTM','Average Mastery':'AM','Low Mastery':'LM','Very Low Mastery':'VLM','Absolutely No Mastery':'ANM'};
+
+  pptx.layout = 'LAYOUT_WIDE';            // 13.33 x 7.5 in
+  pptx.title = 'ELLNA Numeracy Set B - Online Test Pilot: Results and Interpretation';
+  pptx.author = 'Project KABULIG';
+  pptx.company = 'SDO Romblon';
+
+  const items = d.items.slice().sort((a,b)=> (Number(a.id)||0)-(Number(b.id)||0) || String(a.id).localeCompare(String(b.id)));
+  const resp = d.responses, n = resp.length;
+  const A = H.analyze(items, resp);
+  const minutes = (d.settings && d.settings.minutes) || 20;
+  const pcts = resp.map(r=>r.percent);
+  const mean = pcts.reduce((a,b)=>a+b,0)/n;
+  const sorted = pcts.slice().sort((a,b)=>a-b);
+  const median = n%2 ? sorted[(n-1)/2] : (sorted[n/2-1]+sorted[n/2])/2;
+  const mx = sorted[n-1], mn = sorted[0];
+  const sd = n>1 ? Math.sqrt(pcts.reduce((s,x)=>s+(x-mean)*(x-mean),0)/(n-1)) : 0;
+  const avgSec = resp.reduce((s,r)=>s+(r.seconds||0),0)/n;
+  const mm = s => { s=Math.round(s); return Math.floor(s/60)+' min '+String(s%60).padStart(2,'0')+' s'; };
+  const lvl = H.mastery;
+  const comps = H.byCompetency(A).filter(c=>c.mps!=null);
+  const dists = H.byDistrict(resp).filter(x=>x.name!=='(Walang distrito)');
+  const today = new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'});
+  const smallN = n < 6;
+
+  /* ---- item-level facts ---- */
+  const diffLabel = p => p<0.30 ? ['Difficult','F8D7D7','8A1F1F'] : p<0.70 ? ['Moderate','FFF0D1','7A4F00'] : p<=0.90 ? ['Easy','DCF5E9','12663F'] : ['Very easy','E4EEFC','1C4FA0'];
+  const discLabel = D => D==null ? ['n/a','EEF2F6','5B6B80'] : D>=0.40 ? ['Excellent','DCF5E9','12663F'] : D>=0.30 ? ['Good','E4F6F2','0A6B63'] : D>=0.20 ? ['Fair','FFF0D1','7A4F00'] : ['Poor','F8D7D7','8A1F1F'];
+  const facts = A.map(a=>{
+    const it=a.it, keys=Object.keys(it.options).filter(k=>String(it.options[k]).trim()!=='');
+    const wrong = keys.filter(k=>k!==it.answer).map(k=>({k,c:a.counts[k]||0,t:it.options[k]})).sort((x,y)=>y.c-x.c);
+    const top = wrong[0] || {k:'',c:0,t:''};
+    const correctC = a.right;
+    const flags=[]; let score=0;
+    if (a.D!=null && a.D<0){ flags.push('Negative D ('+a.D.toFixed(2)+'): check key and wording'); score+=3; }
+    if (top.c>correctC && top.c>0){ flags.push('A wrong answer was chosen more often than the correct one'); score+=3; }
+    if (a.p<0.30){ flags.push('Very difficult (p = '+a.p.toFixed(2)+')'); score+=2; }
+    if (a.p>0.90){ flags.push('Very easy (p = '+a.p.toFixed(2)+')'); score+=1; }
+    if (a.D!=null && a.D>=0 && a.D<0.20){ flags.push('Poor discrimination (D = '+a.D.toFixed(2)+')'); score+=1; }
+    if (n>=10 && wrong.some(w=>w.c===0)){ flags.push('A wrong option was never chosen'); score+=1; }
+    return {a,it,top,flags,score,topShare:n?top.c/n:0};
+  });
+  const flagged = facts.filter(f=>f.score>0).sort((x,y)=>y.score-x.score || x.a.p-y.a.p);
+
+  let slideNo = 0;
+  function newSlide(title, dark){
+    const s = pptx.addSlide();
+    s.background = {color: dark?NAVY:WHITE};
+    if (title) s.addText(title,{x:0.6,y:0.35,w:12.13,h:0.85,fontFace:FONT,fontSize:32,bold:true,color:dark?WHITE:NAVY,margin:0,valign:'middle',isTextBox:true});
+    s.addText('Project KABULIG | Developed by Sir Dyon',{x:0.6,y:7.02,w:7,h:0.3,fontFace:FONT,fontSize:10,color:dark?'9FB6CC':MUTED,margin:0,isTextBox:true});
+    s.slideNumber = {x:12.0,y:7.02,w:0.73,h:0.3,fontFace:FONT,fontSize:10,color:dark?'9FB6CC':MUTED,align:'right'};
+    slideNo++;
+    return s;
+  }
+  const chartBase = ()=>({
+    catAxisLabelFontFace:FONT, valAxisLabelFontFace:FONT, dataLabelFontFace:FONT, titleFontFace:FONT, legendFontFace:FONT,
+    catAxisLabelFontSize:11, valAxisLabelFontSize:11, dataLabelFontSize:11, titleFontSize:14, titleColor:INK,
+    catAxisLabelColor:INK, valAxisLabelColor:MUTED, dataLabelColor:INK,
+    valGridLine:{color:LINE,size:0.5}, catGridLine:{style:'none'}, showLegend:false, showValue:true, showTitle:true
+  });
+  const hdr = t => ({text:t,options:{bold:true,color:WHITE,fill:{color:NAVY},align:'left',fontFace:FONT}});
+
+  /* ============ 1. TITLE ============ */
+  { const s = newSlide(null,true);
+    s.addShape(pptx.ShapeType.ellipse,{x:9.3,y:-1.6,w:6.2,h:6.2,fill:{color:TEAL,transparency:78},line:{type:'none'}});
+    s.addShape(pptx.ShapeType.ellipse,{x:10.9,y:3.4,w:4.4,h:4.4,fill:{color:GOLD,transparency:82},line:{type:'none'}});
+    s.addText('PROJECT KABULIG  |  ONLINE TEST PILOT',{x:0.8,y:1.7,w:9,h:0.4,fontFace:FONT,fontSize:16,bold:true,color:GOLD,charSpacing:3,margin:0,isTextBox:true});
+    s.addText('ELLNA Numeracy Set B',{x:0.8,y:2.2,w:10,h:1.2,fontFace:FONT,fontSize:54,bold:true,color:WHITE,margin:0,isTextBox:true});
+    s.addText('Results and Interpretation',{x:0.8,y:3.4,w:10,h:0.8,fontFace:FONT,fontSize:34,color:'CFE3F3',margin:0,isTextBox:true});
+    s.addText(plural(n,'participant')+'  |  '+items.length+' items  |  '+today,{x:0.8,y:4.6,w:10,h:0.5,fontFace:FONT,fontSize:20,color:WHITE,margin:0,isTextBox:true});
+    s.addNotes('Opening. This deck summarizes the online pilot of the ELLNA Numeracy Set B test. Explain that the goal of the pilot was to experience an online test and to look at the quality of the items, not to rank participants.');
+  }
+
+  /* ============ 2. HOW TO READ ============ */
+  { const s = newSlide('How to read these results');
+    const cards = [
+      ['MPS','Mean Percentage Score','The average percentage of correct answers. For a competency, it is the average of its items.'],
+      ['p','Difficulty index (p)','The share of participants who answered an item correctly. A low p means a harder item.'],
+      ['D','Discrimination index (D)','How well an item separates high scorers from low scorers (top 27% versus bottom 27%).']
+    ];
+    cards.forEach((c,i)=>{
+      const y = 1.5 + i*1.4;
+      s.addShape(pptx.ShapeType.roundRect,{x:0.6,y:y,w:6.6,h:1.2,fill:{color:TINT},line:{type:'none'},rectRadius:0.12});
+      s.addShape(pptx.ShapeType.ellipse,{x:0.8,y:y+0.2,w:0.8,h:0.8,fill:{color:TEAL},line:{type:'none'}});
+      s.addText(c[0],{x:0.8,y:y+0.2,w:0.8,h:0.8,fontFace:FONT,fontSize:c[0].length>2?15:22,bold:true,color:WHITE,align:'center',valign:'middle',margin:0,isTextBox:true});
+      s.addText([{text:c[1],options:{bold:true,fontSize:18,color:NAVY,breakLine:true}},{text:c[2],options:{fontSize:14,color:INK}}],{x:1.8,y:y+0.08,w:5.25,h:1.04,fontFace:FONT,margin:0,valign:'middle',isTextBox:true});
+    });
+    const levels = [['96 - 100','Mastered'],['86 - 95','Closely Approximating Mastery'],['66 - 85','Moving Towards Mastery'],['35 - 65','Average Mastery'],['15 - 34','Low Mastery'],['5 - 14','Very Low Mastery'],['0 - 4','Absolutely No Mastery']];
+    const rows = [[hdr('MPS (%)'),hdr('Mastery level')]].concat(levels.map(l=>{
+      const m = lvl(Number(l[0].split(' - ')[0]));
+      return [{text:l[0],options:{fontFace:FONT,color:INK}},{text:l[1],options:{fontFace:FONT,bold:true,color:hx(m[1]),fill:{color:hx(m[2])}}}];
+    }));
+    s.addText('Mastery scale (DepEd / BEA criteria)',{x:7.6,y:1.45,w:5.1,h:0.35,fontFace:FONT,fontSize:14,bold:true,color:NAVY,margin:0,isTextBox:true});
+    s.addTable(rows,{x:7.6,y:1.85,w:5.13,colW:[1.3,3.83],rowH:0.42,fontFace:FONT,fontSize:13,border:{type:'solid',color:LINE,pt:0.75},valign:'middle'});
+    s.addShape(pptx.ShapeType.roundRect,{x:0.6,y:5.85,w:12.13,h:0.95,fill:{color:'FFF4D6'},line:{type:'none'},rectRadius:0.1});
+    s.addText([{text:'Please note: ',options:{bold:true}},{text:'this test was taken by teachers and school heads. The results describe this group and the quality of the test items. They do not measure the mastery of Grade 3 learners.'}],{x:0.85,y:5.9,w:11.65,h:0.85,fontFace:FONT,fontSize:15,color:'5E4300',valign:'middle',margin:0,isTextBox:true});
+    s.addNotes('Walk through the three measures first, then the mastery scale. Stress the note at the bottom: the participants are adults, so this is about the items and the experience of online testing.');
+  }
+
+  /* ============ 3. OVERALL ============ */
+  { const s = newSlide('Overall results');
+    const m = lvl(mean);
+    const kpis = [[String(n),'Participants',''],[f1(mean)+'%','Mean score (MPS)',m[0]],[f1(median)+'%','Median score',''],[mm(avgSec),'Average time used','of '+minutes+' min']];
+    kpis.forEach((k,i)=>{
+      const x = 0.6 + i*(2.85+0.243);
+      s.addShape(pptx.ShapeType.roundRect,{x:x,y:1.5,w:2.85,h:1.75,fill:{color:TINT},line:{type:'none'},rectRadius:0.12});
+      s.addText(k[0],{x:x,y:1.6,w:2.85,h:0.85,fontFace:FONT,fontSize:k[0].length>8?30:40,bold:true,color:i===1?hx(m[1]):NAVY,align:'center',valign:'middle',margin:0,isTextBox:true});
+      s.addText(k[1],{x:x,y:2.45,w:2.85,h:0.35,fontFace:FONT,fontSize:15,bold:true,color:INK,align:'center',margin:0,isTextBox:true});
+      s.addText(k[2]||' ',{x:x,y:2.8,w:2.85,h:0.35,fontFace:FONT,fontSize:13,color:MUTED,align:'center',margin:0,isTextBox:true});
+    });
+    const spread = sd<10 ? 'Scores were closely grouped (standard deviation '+f1(sd)+' points).' : sd<=18 ? 'Scores were moderately spread (standard deviation '+f1(sd)+' points).' : 'Scores were widely spread (standard deviation '+f1(sd)+' points), which suggests very different levels of familiarity with the competencies tested.';
+    const paras = [
+      plural(n,'participant')+' took the '+items.length+'-item test and used about '+mm(avgSec)+' on average, against a limit of '+minutes+' minutes.',
+      'The group’s mean score was '+f1(mean)+'%, which falls in the '+m[0]+' level. Scores ranged from '+f1(mn)+'% to '+f1(mx)+'%, and half of the participants scored '+f1(median)+'% or higher.',
+      n>1 ? spread : 'With one participant, no spread can be computed yet.'
+    ];
+    if (smallN) paras.push('With fewer than 6 participants, treat every figure here as illustrative only.');
+    s.addText(paras.map((t,i)=>({text:t,options:{breakLine:i<paras.length-1,paraSpaceAfter:10}})),{x:0.6,y:3.65,w:12.13,h:3.2,fontFace:FONT,fontSize:20,color:INK,valign:'top',margin:0,isTextBox:true});
+    s.addNotes('Read the mean and its mastery level, then the range. Ask the group whether the average matches what they expected for a Grade 3 test taken by adults.');
+  }
+
+  /* ============ 4. DISTRIBUTION ============ */
+  { const s = newSlide('How the scores are distributed');
+    const bins = Array(10).fill(0); pcts.forEach(p=>{ bins[Math.min(9,Math.floor(p/10))]++; });
+    const labels = bins.map((_,i)=> (i*10)+(i===9?'-100':'-'+(i*10+9)));
+    s.addChart(pptx.charts.BAR,[{name:'Participants',labels:labels,values:bins}],Object.assign(chartBase(),{
+      x:0.6,y:1.4,w:7.4,h:5.4,barDir:'col',chartColors:[TEAL],barGapWidthPct:40,dataLabelPosition:'outEnd',
+      title:'Number of participants per score range (%)',valAxisMinVal:0,valAxisMajorUnit:Math.max(1,Math.ceil(Math.max.apply(null,bins)/5)),dataLabelFormatCode:'0'}));
+    const order = ['Mastered','Closely Approximating Mastery','Moving Towards Mastery','Average Mastery','Low Mastery','Very Low Mastery','Absolutely No Mastery'];
+    const cnt = {}; order.forEach(o=>cnt[o]=0); pcts.forEach(p=>{ cnt[lvl(p)[0]]++; });
+    const rows = [[hdr('Mastery level'),hdr('No.'),hdr('%')]].concat(order.map(o=>{
+      const m = lvl(o==='Mastered'?96:o==='Closely Approximating Mastery'?86:o==='Moving Towards Mastery'?66:o==='Average Mastery'?35:o==='Low Mastery'?15:o==='Very Low Mastery'?5:0);
+      return [{text:ABBR[o]+'  '+o,options:{fontFace:FONT,color:hx(m[1]),fill:{color:hx(m[2])},bold:true}},{text:String(cnt[o]),options:{fontFace:FONT,align:'center'}},{text:pc(cnt[o]/n*100)+'%',options:{fontFace:FONT,align:'center'}}];
+    }));
+    s.addTable(rows,{x:8.3,y:1.45,w:4.43,colW:[2.93,0.7,0.8],rowH:0.36,fontFace:FONT,fontSize:12,border:{type:'solid',color:LINE,pt:0.75},valign:'middle'});
+    const top = bins.indexOf(Math.max.apply(null,bins));
+    const hi = pcts.filter(p=>p>=66).length, lo = pcts.filter(p=>p<35).length;
+    const txt = [
+      'The most common range was '+labels[top]+'% ('+plural(bins[top],'participant')+', '+pc(bins[top]/n*100)+'%).',
+      hi+' ('+pc(hi/n*100)+'%) reached at least Moving Towards Mastery, while '+lo+' ('+pc(lo/n*100)+'%) scored below 35%.'
+    ];
+    s.addText(txt.map((t,i)=>({text:t,options:{breakLine:i<txt.length-1,paraSpaceAfter:8}})),{x:8.3,y:4.55,w:4.43,h:2.3,fontFace:FONT,fontSize:15,color:INK,valign:'top',margin:0,isTextBox:true});
+    s.addNotes('Point to the tallest bar and to where most participants fall on the mastery scale. A spread-out distribution means the test separated participants well.');
+  }
+
+  /* ============ 5. BY COMPETENCY (chart) ============ */
+  if (comps.length){
+    const s = newSlide('Results by learning competency');
+    s.addChart(pptx.charts.BAR,[{name:'MPS',labels:comps.map(c=>tr(c.name,44)),values:comps.map(c=>Math.round(c.mps*10)/10)}],Object.assign(chartBase(),{
+      x:0.6,y:1.4,w:7.9,h:5.45,barDir:'bar',chartColors:[TEAL],barGapWidthPct:35,dataLabelPosition:'outEnd',
+      title:'MPS per competency (%), lowest first',catAxisOrientation:'maxMin',valAxisMinVal:0,valAxisMaxVal:100,valAxisHidden:true,dataLabelFormatCode:'0.0'}));
+    const low = comps.slice(0,Math.min(3,comps.length)), high = comps.slice(-Math.min(2,comps.length)).reverse();
+    const one = comps.filter(c=>c.ids.length===1).length;
+    const bl = [];
+    bl.push({text:'Lowest',options:{bold:true,color:NAVY,fontSize:18,breakLine:true}});
+    low.forEach(c=>bl.push({text:c.name+' ('+f1(c.mps)+'%)',options:{bullet:true,breakLine:true,paraSpaceAfter:4}}));
+    bl.push({text:'Highest',options:{bold:true,color:NAVY,fontSize:18,breakLine:true,paraSpaceBefore:10}});
+    high.forEach((c,i)=>bl.push({text:c.name+' ('+f1(c.mps)+'%)',options:{bullet:true,breakLine:true,paraSpaceAfter:4}}));
+    if (one>1) bl.push({text:one+' of '+comps.length+' competencies are measured by a single item, so read them with care.',options:{italic:true,color:MUTED,fontSize:13,paraSpaceBefore:10}});
+    s.addText(bl,{x:8.8,y:1.5,w:3.93,h:5.3,fontFace:FONT,fontSize:15,color:INK,valign:'top',margin:0,isTextBox:true});
+    s.addNotes('The bars are ordered from the weakest to the strongest competency. Ask: which of the lowest competencies are taught earlier in Grade 3, and which are usually rushed?');
+  }
+
+  /* ============ 6. COMPETENCY TABLE ============ */
+  if (comps.length){
+    const pagesN = Math.ceil(comps.length/12), per = Math.ceil(comps.length/pagesN);
+    for (let p0=0, page=1; p0<comps.length; p0+=per, page++){
+      const chunk = comps.slice(p0,p0+per);
+      const s = newSlide('Competency mastery table'+(pagesN>1?' ('+page+' of '+pagesN+')':''));
+      const rows = [[hdr('Learning competency'),hdr('Items'),hdr('MPS'),hdr('Mastery level')]].concat(chunk.map(c=>{
+        const m = lvl(c.mps);
+        return [{text:tr(c.name,60),options:{fontFace:FONT,color:INK}},{text:c.ids.map(i=>'#'+i).join(', '),options:{fontFace:FONT,color:INK}},{text:f1(c.mps)+'%',options:{fontFace:FONT,bold:true,align:'center',color:INK}},{text:m[0],options:{fontFace:FONT,bold:true,color:hx(m[1]),fill:{color:hx(m[2])}}}];
+      }));
+      s.addTable(rows,{x:0.6,y:1.4,w:12.13,colW:[5.0,2.6,1.2,3.33],rowH:0.4,fontFace:FONT,fontSize:13,border:{type:'solid',color:LINE,pt:0.75},valign:'middle'});
+      if (page===pagesN) s.addText('MPS of a competency is the average percentage correct across its items. Competencies with only 1 or 2 items give weaker evidence.',{x:0.6,y:6.62,w:12.13,h:0.3,fontFace:FONT,fontSize:12,italic:true,color:MUTED,margin:0,isTextBox:true});
+      s.addNotes('Use this table when someone asks for the exact numbers behind the chart. Item numbers follow the printed Set B booklet.');
+    }
+  }
+
+  /* ============ 7. BY DISTRICT ============ */
+  if (dists.length>1){
+    const s = newSlide('Results by district');
+    const list = dists.slice(0,14);
+    s.addChart(pptx.charts.BAR,[{name:'MPS',labels:list.map(x=>tr(x.name,24)+' (n='+x.n+')'),values:list.map(x=>Math.round(x.mps*10)/10)}],Object.assign(chartBase(),{
+      x:0.6,y:1.4,w:7.9,h:5.45,barDir:'bar',chartColors:[BLUE],barGapWidthPct:35,dataLabelPosition:'outEnd',
+      title:'Mean score per district (%), lowest first',catAxisOrientation:'maxMin',valAxisMinVal:0,valAxisMaxVal:100,valAxisHidden:true,dataLabelFormatCode:'0.0'}));
+    const bl = [];
+    const L = dists[0], Hh = dists[dists.length-1];
+    if (dists.length>1){
+      bl.push({text:'Highest: '+Hh.name+' ('+f1(Hh.mps)+'%)',options:{bullet:true,breakLine:true,paraSpaceAfter:6}});
+      bl.push({text:'Lowest: '+L.name+' ('+f1(L.mps)+'%)',options:{bullet:true,breakLine:true,paraSpaceAfter:6}});
+      bl.push({text:'Gap between them: '+f1(Hh.mps-L.mps)+' points.',options:{bullet:true,breakLine:true,paraSpaceAfter:6}});
+    } else bl.push({text:'Only one district is represented ('+L.name+', '+f1(L.mps)+'%).',options:{bullet:true,breakLine:true,paraSpaceAfter:6}});
+    const tiny = dists.filter(x=>x.n<5).length;
+    if (tiny) bl.push({text:tiny+' of '+dists.length+' districts have fewer than 5 participants, so their averages can change a lot with one more test.',options:{italic:true,color:MUTED,fontSize:13,paraSpaceBefore:10}});
+    s.addText(bl,{x:8.8,y:1.5,w:3.93,h:5.3,fontFace:FONT,fontSize:16,color:INK,valign:'top',margin:0,isTextBox:true});
+    s.addNotes('District averages describe the pilot participants from each district, not the district as a whole. Use them to start a conversation, not to rank districts.');
+  }
+
+  /* ============ 8-9. ITEM TABLES ============ */
+  { const per = 10, pages = Math.ceil(facts.length/per);
+    for (let p0=0, page=1; p0<facts.length; p0+=per, page++){
+      const chunk = facts.slice(p0,p0+per);
+      const first = chunk[0].it.id, last = chunk[chunk.length-1].it.id;
+      const s = newSlide('Item analysis: items '+first+' to '+last);
+      const rows = [[hdr('Item'),hdr('Competency'),hdr('Correct answer'),hdr('p'),hdr('Difficulty'),hdr('D'),hdr('Discrimination'),hdr('Most chosen wrong answer')]].concat(chunk.map(f=>{
+        const dl = diffLabel(f.a.p), cl = discLabel(f.a.D);
+        const wrongTxt = f.top.t ? tr(f.top.t,26)+' ('+pc(f.topShare*100)+'%)' : '-';
+        return [
+          {text:'#'+f.it.id,options:{fontFace:FONT,bold:true,color:NAVY}},
+          {text:tr(f.it.competency,34),options:{fontFace:FONT,color:INK}},
+          {text:tr(f.it.options[f.it.answer],28),options:{fontFace:FONT,color:INK}},
+          {text:f.a.p.toFixed(2),options:{fontFace:FONT,align:'center',bold:true,color:INK}},
+          {text:dl[0],options:{fontFace:FONT,align:'center',bold:true,color:dl[2],fill:{color:dl[1]}}},
+          {text:f.a.D==null?'-':f.a.D.toFixed(2),options:{fontFace:FONT,align:'center',bold:true,color:INK}},
+          {text:cl[0],options:{fontFace:FONT,align:'center',bold:true,color:cl[2],fill:{color:cl[1]}}},
+          {text:wrongTxt,options:{fontFace:FONT,color:INK}}
+        ];
+      }));
+      s.addTable(rows,{x:0.6,y:1.4,w:12.13,colW:[0.7,2.75,2.3,0.7,1.2,0.7,1.35,2.43],rowH:0.43,fontFace:FONT,fontSize:12,border:{type:'solid',color:LINE,pt:0.75},valign:'middle'});
+      if (page===1) s.addText('p: below 0.30 difficult, 0.30 to 0.69 moderate, 0.70 to 0.90 easy, above 0.90 very easy.   D: 0.40 and above excellent, 0.30 to 0.39 good, 0.20 to 0.29 fair, below 0.20 poor'+(smallN?' (D needs at least 6 participants).':'.'),{x:0.6,y:6.35,w:12.13,h:0.55,fontFace:FONT,fontSize:11,italic:true,color:MUTED,margin:0,isTextBox:true,valign:'top'});
+      else s.addText('The most chosen wrong answer shows its text, not its letter, because answer choices were shuffled on every device.',{x:0.6,y:6.35,w:12.13,h:0.55,fontFace:FONT,fontSize:11,italic:true,color:MUTED,margin:0,isTextBox:true,valign:'top'});
+      s.addNotes('Read the table by looking for items whose difficulty or discrimination stands out. The wrong answer that attracts many participants often points to a common misconception.');
+    }
+  }
+
+  /* ============ 10. ITEMS TO REVIEW ============ */
+  { const s = newSlide('Items to review');
+    if (n<6){
+      s.addShape(pptx.ShapeType.roundRect,{x:0.6,y:1.6,w:12.13,h:2.4,fill:{color:'FFF4D6'},line:{type:'none'},rectRadius:0.12});
+      s.addText('Too few responses to judge the items yet.',{x:0.9,y:1.8,w:11.5,h:0.6,fontFace:FONT,fontSize:24,bold:true,color:'5E4300',margin:0,isTextBox:true});
+      s.addText('With fewer than 6 participants, difficulty and discrimination can change a lot with one more response. Collect more responses before changing any item.',{x:0.9,y:2.55,w:11.5,h:1.3,fontFace:FONT,fontSize:18,color:INK,margin:0,valign:'top',isTextBox:true});
+    } else if (!flagged.length){
+      s.addShape(pptx.ShapeType.roundRect,{x:0.6,y:1.6,w:12.13,h:2.2,fill:{color:TINT},line:{type:'none'},rectRadius:0.12});
+      s.addText('No item shows a clear warning sign in this group.',{x:0.9,y:1.8,w:11.5,h:0.6,fontFace:FONT,fontSize:24,bold:true,color:NAVY,margin:0,isTextBox:true});
+      s.addText('Difficulty and discrimination look acceptable for every item'+(smallN?', but the group is small, so check again with more participants.':'. Keep monitoring as more participants take the test.'),{x:0.9,y:2.5,w:11.5,h:1.1,fontFace:FONT,fontSize:18,color:INK,margin:0,valign:'top',isTextBox:true});
+    } else {
+      const show = flagged.slice(0,6);
+      show.forEach((f,i)=>{
+        const col = i%2, row = Math.floor(i/2);
+        const x = 0.6 + col*6.2, y = 1.45 + row*1.8;
+        s.addShape(pptx.ShapeType.roundRect,{x:x,y:y,w:5.93,h:1.62,fill:{color:SOFT},line:{color:LINE,pt:0.75},rectRadius:0.1});
+        s.addText('Item '+f.it.id+'  |  '+tr(f.it.competency,40),{x:x+0.2,y:y+0.1,w:5.55,h:0.4,fontFace:FONT,fontSize:17,bold:true,color:NAVY,margin:0,isTextBox:true});
+        s.addText(f.flags.slice(0,3).map((t,k,arr)=>({text:t,options:{bullet:true,breakLine:k<arr.length-1}})),{x:x+0.2,y:y+0.55,w:5.55,h:1.0,fontFace:FONT,fontSize:14,color:INK,margin:0,valign:'top',isTextBox:true});
+      });
+      if (flagged.length>6 || n<10) s.addText((flagged.length>6?'+ '+(flagged.length-6)+' more item(s) with minor flags are in the item analysis tables.  ':'')+(n<10?'Based on fewer than 10 participants: confirm these flags with more responses.':''),{x:0.6,y:6.72,w:12.13,h:0.28,fontFace:FONT,fontSize:12,italic:true,color:MUTED,margin:0,isTextBox:true});
+    }
+    s.addNotes('These are items worth checking before the test is used again: answer key, wording, figure clarity, or whether the competency was really taught. A negative D or a wrong option that beats the correct one is the strongest warning.');
+  }
+
+  /* ============ 11. HARDEST & EASIEST ============ */
+  { const s = newSlide('Hardest and easiest items');
+    const k = Math.max(1,Math.min(3,Math.floor(facts.length/2)));
+    const asc = facts.slice().sort((x,y)=>x.a.p-y.a.p);
+    const hard = asc.slice(0,k), easy = asc.slice().reverse().slice(0,k);
+    function col(x,title,list,color){
+      s.addText(title,{x:x,y:1.4,w:5.93,h:0.45,fontFace:FONT,fontSize:20,bold:true,color:color,margin:0,isTextBox:true});
+      list.forEach((f,i)=>{
+        const y = 2.0 + i*1.6;
+        s.addShape(pptx.ShapeType.roundRect,{x:x,y:y,w:5.93,h:1.45,fill:{color:SOFT},line:{color:LINE,pt:0.75},rectRadius:0.1});
+        s.addText(pc(f.a.p*100)+'%',{x:x+0.1,y:y+0.1,w:1.6,h:1.25,fontFace:FONT,fontSize:34,bold:true,color:color,align:'center',valign:'middle',margin:0,isTextBox:true});
+        s.addText([{text:'Item '+f.it.id+'  |  '+tr(f.it.competency,30),options:{bold:true,fontSize:15,color:NAVY,breakLine:true}},{text:tr(f.it.question,92),options:{fontSize:13,color:INK}}],{x:x+1.8,y:y+0.1,w:4.0,h:1.25,fontFace:FONT,margin:0,valign:'middle',isTextBox:true});
+      });
+    }
+    col(0.6,'Most difficult (lowest % correct)',hard,'B03030');
+    col(6.8,'Easiest (highest % correct)',easy,'12663F');
+    s.addNotes('The percentage is the share of participants who answered the item correctly. Discuss why the hardest items were hard: the skill itself, the wording, or the figure.');
+  }
+
+  /* ============ 12. WHAT THE RESULTS SUGGEST ============ */
+  { const s = newSlide('What the results suggest');
+    const rec = [];
+    if (comps.length){
+      const low = comps.slice(0,Math.min(3,comps.length));
+      rec.push(['Re-teach first', low[0].mps>=66 ? 'Every competency reached at least Moving Towards Mastery. To raise results further, start with '+listAnd(low.map(c=>c.name+' ('+f1(c.mps)+'%)'))+'.' : listAnd(low.map(c=>c.name+' ('+f1(c.mps)+'%)'))+' had the lowest MPS. Plan short refresher lessons or ARAL sessions on these.']);
+      const hi = comps.slice(-Math.min(2,comps.length)).reverse();
+      rec.push(['Build on strengths','The strongest results were in '+listAnd(hi.map(c=>c.name+' ('+f1(c.mps)+'%)'))+'. Share the practices that work for these competencies.']);
+    }
+    rec.push(['Review items before reuse', n<6 ? 'With fewer than 6 participants, item flags are not reliable yet. Collect more responses before changing any item.' : flagged.length ? 'Check item'+(flagged.length>1?'s ':' ')+listAnd(flagged.slice(0,6).slice().sort((x,y)=>(Number(x.it.id)||0)-(Number(y.it.id)||0)).map(f=>'#'+f.it.id))+' (see Items to review): key, wording and figures.' : 'No major item concern was found. Keep monitoring as more participants take the test.']);
+    if (dists.length>1) rec.push(['Follow up by district', dists[0].name+' had the lowest average ('+f1(dists[0].mps)+'%) and '+dists[dists.length-1].name+' the highest ('+f1(dists[dists.length-1].mps)+'%). Offer technical assistance where the need is greatest.']);
+    rec.push(['Use the results carefully','These are results of teachers and school heads on a Grade 3 test. Use them to improve the items and the testing process, and pair them with learner data before making decisions on learners.']);
+    const shown = rec.slice(0,5), rh = 5.3/shown.length;
+    shown.forEach((r,i)=>{
+      const y = 1.45 + i*rh;
+      s.addShape(pptx.ShapeType.ellipse,{x:0.6,y:y+0.1,w:0.7,h:0.7,fill:{color:TEAL},line:{type:'none'}});
+      s.addText(String(i+1),{x:0.6,y:y+0.1,w:0.7,h:0.7,fontFace:FONT,fontSize:22,bold:true,color:WHITE,align:'center',valign:'middle',margin:0,isTextBox:true});
+      s.addText([{text:r[0],options:{bold:true,fontSize:19,color:NAVY,breakLine:true}},{text:r[1],options:{fontSize:15,color:INK}}],{x:1.55,y:y,w:11.2,h:rh-0.1,fontFace:FONT,margin:0,valign:'top',isTextBox:true});
+    });
+    s.addNotes('These suggestions are generated from the numbers in this deck. Adjust them with local knowledge before presenting them as action points.');
+  }
+
+  /* ============ 13. DISCUSSION ============ */
+  { const s = newSlide('For discussion', true);
+    const q = ['Which result surprised you most, and why?','Which competency would you re-teach first, and how?','Which items would you revise or replace?','How can item analysis help in your ARAL and LAC sessions?'];
+    q.forEach((t,i)=>{
+      const col = i%2, row = Math.floor(i/2);
+      const x = 0.6 + col*6.2, y = 1.7 + row*2.5;
+      s.addShape(pptx.ShapeType.roundRect,{x:x,y:y,w:5.93,h:2.2,fill:{color:'12395F'},line:{type:'none'},rectRadius:0.12});
+      s.addText(String(i+1),{x:x+0.25,y:y+0.2,w:0.8,h:0.8,fontFace:FONT,fontSize:36,bold:true,color:GOLD,margin:0,isTextBox:true});
+      s.addText(t,{x:x+0.25,y:y+0.95,w:5.4,h:1.1,fontFace:FONT,fontSize:22,color:WHITE,margin:0,valign:'top',isTextBox:true});
+    });
+    s.addNotes('Give participants a few minutes in small groups, then take two or three responses.');
+  }
+
+  /* ============ 14. METHOD NOTES ============ */
+  { const s = newSlide('Notes on method');
+    const b = [
+      'Data: '+plural(n,'response')+' from the online pilot of ELLNA Numeracy Set B ('+items.length+' items, '+minutes+' minutes). Question and answer-choice order were shuffled on every device.',
+      'Percent score = number correct divided by total items. MPS = mean percentage score.',
+      'p = number answering an item correctly divided by number of participants. The MPS of a competency is the mean of the p values of its items.',
+      'D = p of the top 27% of scorers minus p of the bottom 27%. It is shown only when there are at least 6 participants.',
+      'Mastery levels follow the DepEd / BEA criteria for achievement level (MPS descriptive equivalents).',
+      'Item numbers follow the printed Set B booklet. Letters A to D are not used because the choices were shuffled.'
+    ];
+    s.addText(b.map((t,i)=>({text:t,options:{bullet:true,breakLine:i<b.length-1,paraSpaceAfter:10}})),{x:0.6,y:1.5,w:12.13,h:5.2,fontFace:FONT,fontSize:19,color:INK,valign:'top',margin:0,isTextBox:true});
+  }
+  return slideNo;
+}
+
 function exportCSV(){
   const d = window.__adminData; if(!d) return;
   const q = s => '"'+String(s==null?'':s).replace(/"/g,'""')+'"';
