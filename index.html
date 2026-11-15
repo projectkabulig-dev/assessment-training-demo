@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b2a4a">
 <title>Online Test Pilot | Project KABULIG</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --navy:#0b2a4a; --blue:#145a8a; --teal:#0fa3a3; --gold:#f7b733; --coral:#ef5b5b; --green:#1faa6b;
@@ -16,7 +13,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{font-family:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.5}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.5}
 .hero{background:linear-gradient(135deg,#0b2a4a 0%,#145a8a 55%,#0fa3a3 100%);color:#fff;padding:22px 18px 90px;position:relative;overflow:hidden}
 .hero::before,.hero::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.07)}
 .hero::before{width:260px;height:260px;right:-70px;top:-80px}
@@ -224,32 +221,29 @@ function footer(){
 }
 
 /* ---------- load test ---------- */
-async function loadTest(){
-  if (DEMO_MODE) { TEST = JSON.parse(JSON.stringify(DEMO)); return; }
+async function fetchTest(){
+  if (DEMO_MODE) return JSON.parse(JSON.stringify(DEMO));
   const d = await api({action:'items'});
   if (!d.ok) throw new Error(d.error||'Hindi ma-load ang test.');
-  TEST = {settings:d.settings, items:d.items};
+  return {settings:d.settings, items:d.items};
 }
 
 /* ---------- 1. INTRO (instructions first) ---------- */
-async function viewIntro(){
-  clearInterval(tick);
-  $app.innerHTML = header()+`<div class="wrap"><div class="card"><div class="spin"></div><p class="lead" style="text-align:center">Nilo-load ang test...</p></div></div>`;
-  try{ await loadTest(); }
-  catch(e){
-    $app.innerHTML = header()+`<div class="wrap"><div class="card"><h2>Hindi ma-load ang test</h2><p class="lead">Suriin ang internet o signal, tapos subukan ulit.</p><div class="err">${esc(e.message)}</div><div class="row"><button class="btn primary" onclick="viewIntro()">Subukan ulit</button></div></div>${footer()}</div>`;
-    return;
-  }
-  const st = TEST.settings, n = TEST.items.length;
+let VIEW='';
+const ITEMS_KEY='kabulig_pilot_items_cache';
+function renderIntro(err){
+  VIEW='intro';
+  const ready = !!TEST;
+  const st = ready ? TEST.settings : null, n = ready ? TEST.items.length : 0;
   const saved = store.get(SESSION_KEY);
-  const canResume = saved && !saved.submitted && saved.deadline > Date.now() && saved.sig === sig();
+  const canResume = ready && saved && !saved.submitted && saved.deadline > Date.now() && saved.sig === sig();
   $app.innerHTML = header()+`
   <div class="wrap">
     <div class="card">
       <span class="tag">PANUTO</span>
-      <h1>${esc(st.title)}</h1>
+      <h1>${ready?esc(st.title):'Online Test Pilot'}</h1>
       <p class="lead">Basahin muna ang panuto bago magsimula.</p>
-      <div class="chips"><span class="chip">${n} na tanong</span><span class="chip">${st.minutes} minuto</span><span class="chip gold">Instant na puntos</span></div>
+      <div class="chips">${ready?`<span class="chip">${n} na tanong</span><span class="chip">${st.minutes} minuto</span><span class="chip gold">Instant na puntos</span>`:(err?`<span class="chip" style="background:#ffe3e3;color:#b03030">Hindi makakonekta</span>`:`<span class="chip">Nilo-load ang test...</span>`)}</div>
       <ol class="steps">
         <li><span>Ilagay ang iyong <b>pangalan</b>, paaralan o tanggapan, at distrito.</span></li>
         <li><span>Basahin ang bawat tanong. Pumili ng <b>isang</b> pinakatamang sagot (A, B, C o D).</span></li>
@@ -259,16 +253,33 @@ async function viewIntro(){
       </ol>
       <div class="note"><b>Tandaan:</b> Pilot test ito at <b>low-stakes</b>. Layunin nitong maranasan ang online na pagsusulit at suriin ang kalidad ng mga tanong, hindi ang husgahan ka. Huwag magkopyahan para tama ang resulta ng pagsusuri. Gamitin ang sarili mong cellphone, may charge at may signal.</div>
       <div class="row">
-        ${st.open?`<button class="btn primary" onclick="viewRegister()">Magsimula</button>`:`<button class="btn" disabled>Sarado na ang test</button>`}
+        ${!ready?(err?`<button class="btn primary" onclick="viewIntro()">Subukan ulit</button>`:`<button class="btn" disabled>Sandali lang...</button>`)
+          :st.open?`<button class="btn primary" onclick="viewRegister()">Magsimula</button>`:`<button class="btn" disabled>Sarado na ang test</button>`}
         ${canResume?`<button class="btn gold" onclick="resume()">Ituloy ang naunang sagot</button>`:''}
       </div>
     </div>${footer()}
   </div>`;
 }
+async function viewIntro(){
+  clearInterval(tick);
+  // 1) ipakita agad ang panuto (gamit ang naka-cache na test kung meron)
+  if (!TEST){ const c = store.get(ITEMS_KEY); if (c && c.items && c.settings) TEST = c; }
+  renderIntro(false);
+  // 2) kunin ang pinakabago sa background
+  try{
+    const fresh = await fetchTest();
+    store.set(ITEMS_KEY, fresh);
+    if (VIEW !== 'test'){ TEST = fresh; }
+    if (VIEW === 'intro') renderIntro(false);
+  }catch(e){
+    if (VIEW === 'intro') renderIntro(!TEST);
+  }
+}
 function sig(){ return TEST ? TEST.items.map(i=>i.id).join('|') : ''; }
 
 /* ---------- 2. REGISTER ---------- */
 function viewRegister(){
+  VIEW='register';
   $app.innerHTML = header()+`
   <div class="wrap"><div class="card">
     <span class="tag">IMPORMASYON</span>
@@ -315,6 +326,7 @@ function saveS(){ store.set(SESSION_KEY,S); }
 /* ---------- 3. TEST ---------- */
 function itemById(id){ return TEST.items.find(i=>i.id===id); }
 function viewTest(){
+  VIEW='test';
   clearInterval(tick);
   const total = S.order.length;
   const it = itemById(S.order[S.idx]);
