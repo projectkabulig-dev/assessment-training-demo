@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fil">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b2a4a">
+<title>Online Test Pilot | Project KABULIG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0b2a4a; --blue:#145a8a; --teal:#0fa3a3; --gold:#f7b733; --coral:#ef5b5b; --green:#1faa6b;
+  --bg:#f2f6fb; --card:#ffffff; --ink:#14263b; --muted:#6a7c92; --line:#e2e9f2;
+  --shadow:0 10px 30px rgba(11,42,74,.10); --r:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.5}
+.hero{background:linear-gradient(135deg,#0b2a4a 0%,#145a8a 55%,#0fa3a3 100%);color:#fff;padding:22px 18px 90px;position:relative;overflow:hidden}
+.hero::before,.hero::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.07)}
+.hero::before{width:260px;height:260px;right:-70px;top:-80px}
+.hero::after{width:180px;height:180px;left:-60px;bottom:-70px}
+.brand{display:flex;align-items:center;gap:10px;max-width:760px;margin:0 auto;position:relative;z-index:1}
+.logo{width:38px;height:38px;border-radius:12px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-weight:800;font-size:18px}
+.brand small{display:block;opacity:.8;font-size:11px;letter-spacing:.4px}
+.brand b{font-size:15px;letter-spacing:.3px}
+.wrap{max-width:760px;margin:-64px auto 40px;padding:0 14px;position:relative;z-index:2}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:24px 22px;margin-bottom:16px}
+h1{font-size:24px;line-height:1.25;color:var(--navy);font-weight:800}
+h2{font-size:18px;color:var(--navy);font-weight:700;margin-bottom:10px}
+p.lead{color:var(--muted);margin-top:6px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
+.chip{background:#eaf4fb;color:var(--blue);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600}
+.chip.gold{background:#fff4d6;color:#8a5a00}
+.steps{list-style:none;margin-top:14px;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.steps li:last-child{border-bottom:0}
+.steps li::before{content:counter(s);flex:0 0 28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--blue));color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
+.note{background:#fff8e6;border-left:4px solid var(--gold);padding:12px 14px;border-radius:10px;font-size:13px;color:#6b4a00;margin-top:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;font-family:inherit;font-weight:700;font-size:15px;padding:14px 26px;border-radius:999px;transition:transform .12s,box-shadow .12s,opacity .12s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(135deg,var(--teal),var(--blue));color:#fff;box-shadow:0 8px 20px rgba(20,90,138,.3)}
+.btn.gold{background:var(--gold);color:var(--navy)}
+.btn.ghost{background:#eef3f9;color:var(--navy)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn.block{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin:14px 0 6px}
+input[type=text],input[type=password]{width:100%;padding:13px 14px;border:2px solid var(--line);border-radius:14px;font:inherit;font-size:15px;background:#fbfdff;outline:none}
+input:focus{border-color:var(--teal);background:#fff}
+.err{color:var(--coral);font-size:13px;margin-top:8px;font-weight:600}
+.foot{text-align:center;color:var(--muted);font-size:12px;padding:6px 14px 30px}
+.foot a{color:var(--blue);cursor:pointer;text-decoration:underline}
+.demo{background:#ffe9e9;color:#a02222;font-size:12px;text-align:center;padding:6px;font-weight:600}
+
+/* test */
+.bar{position:sticky;top:0;z-index:20;background:#fff;box-shadow:0 4px 14px rgba(11,42,74,.08)}
+.bar-in{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:10px}
+.qcount{font-weight:700;color:var(--navy);font-size:14px}
+.timer{font-weight:800;font-size:16px;background:#eaf4fb;color:var(--blue);padding:6px 14px;border-radius:999px;font-variant-numeric:tabular-nums}
+.timer.low{background:#ffe3e3;color:var(--coral);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.prog{height:5px;background:var(--line)}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--gold));width:0;transition:width .25s}
+.tag{display:inline-block;background:#eaf4fb;color:var(--blue);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:12px}
+.q{font-size:19px;font-weight:600;color:var(--navy);line-height:1.45;white-space:pre-line}
+.figwrap{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff;max-width:440px}
+.fig{width:100%;height:auto;display:block}
+.qimg{max-width:100%;border-radius:14px;margin-top:12px;border:1px solid var(--line)}
+.choices{margin-top:18px;display:grid;gap:10px}
+.choice{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:#fff;border:2px solid var(--line);border-radius:16px;padding:14px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer;transition:border-color .12s,background .12s,transform .1s}
+.choice:active{transform:scale(.99)}
+.choice .b{flex:0 0 36px;height:36px;border-radius:12px;background:#eef3f9;color:var(--navy);display:grid;place-items:center;font-weight:800}
+.choice.sel{border-color:var(--teal);background:#eafafa}
+.choice.sel .b{background:var(--teal);color:#fff}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+.dots{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:8px;margin-top:6px}
+.dot{height:40px;border-radius:12px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:700;color:var(--muted);cursor:pointer}
+.dot.done{background:#dff4ec;border-color:#b6e6d1;color:#12804f}
+.dot.cur{border-color:var(--blue);color:var(--blue);box-shadow:0 0 0 3px rgba(20,90,138,.15)}
+.modal{position:fixed;inset:0;background:rgba(11,42,74,.55);display:grid;place-items:center;z-index:50;padding:18px}
+.modal .box{background:#fff;border-radius:22px;padding:24px;max-width:380px;width:100%}
+
+/* result */
+.score{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ring{width:130px;height:130px;position:relative;flex:0 0 130px}
+.ring svg{transform:rotate(-90deg)}
+.ring span{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:28px;color:var(--navy)}
+.rv{border-top:1px solid var(--line);padding:16px 0}
+.rv:first-child{border-top:0}
+.rv .qq{font-weight:600;color:var(--navy);white-space:pre-line}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;margin-right:6px}
+.pill.ok{background:#dff4ec;color:#12804f}.pill.bad{background:#ffe3e3;color:#b03030}.pill.skip{background:#eee;color:#666}
+.ans{font-size:14px;margin-top:6px}
+.expl{font-size:13px;color:var(--muted);margin-top:6px;background:#f6f9fc;padding:10px 12px;border-radius:12px}
+
+/* admin */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi{background:linear-gradient(135deg,#f4fafc,#eaf4fb);border-radius:16px;padding:14px}
+.kpi b{display:block;font-size:24px;color:var(--navy);font-weight:800}
+.kpi span{font-size:12px;color:var(--muted)}
+.hist{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:10px}
+.hist div{flex:1;background:linear-gradient(180deg,var(--teal),var(--blue));border-radius:8px 8px 0 0;position:relative;min-height:2px}
+.hist div em{position:absolute;top:-18px;left:0;right:0;text-align:center;font-style:normal;font-size:11px;font-weight:700;color:var(--navy)}
+.hlab{display:flex;gap:6px;font-size:10px;color:var(--muted);text-align:center;margin-top:4px}.hlab span{flex:1}
+.it{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}
+.it h3{font-size:14px;color:var(--navy);white-space:pre-line}
+.meter{height:10px;background:var(--line);border-radius:999px;overflow:hidden;margin:8px 0 4px}
+.meter i{display:block;height:100%}
+.stats{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.stats b{color:var(--navy)}
+.flag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;margin:6px 6px 0 0}
+.flag.w{background:#fff0d1;color:#8a5a00}.flag.r{background:#ffe3e3;color:#b03030}.flag.g{background:#dff4ec;color:#12804f}
+.dist{display:grid;gap:5px;margin-top:10px}
+.dist div{display:flex;align-items:center;gap:8px;font-size:12px}
+.dist .l{width:22px;font-weight:800;color:var(--navy)}
+.dist .t{flex:1;background:#eef3f9;border-radius:6px;height:16px;overflow:hidden}
+.dist .t i{display:block;height:100%;background:#b8c8da}
+.dist .ok .t i{background:var(--green)}
+.dist .n{width:62px;text-align:right;color:var(--muted)}
+.spin{width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--teal);border-radius:50%;animation:sp .8s linear infinite;margin:20px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (max-width:480px){h1{font-size:21px}.q{font-size:17px}.card{padding:20px 16px}}
+</style>
+</head>
+<body>
+<div id="demoBanner" class="demo" style="display:none">DEMO MODE: walang konektadong Google Sheet. Sa browser na ito lang nase-save ang mga sagot.</div>
+<div id="app"></div>
+
+<script>
+/* =====================================================================
+   PROJECT KABULIG - ONLINE TEST PILOT  |  Developed by Sir Dyon
+   ===================================================================== */
+const CONFIG = {
+  // Ilagay dito ang Web App URL ng Apps Script pagkatapos mag-deploy.
+  // Kapag walang laman, tatakbo ito sa DEMO MODE gamit ang sample items.
+  APPS_SCRIPT_URL: "",
+  // Para sa demo mode lang (ang totoong ADMIN_KEY ay nasa Code.gs)
+  DEMO_ADMIN_KEY: "kabulig2026"
+};
+
+/* ---------- ELLNA Numeracy Set B (gamit sa DEMO MODE; sa totoong mode galing sa Google Sheet) ---------- */
+const DEMO = {
+  settings:{title:"ELLNA Numeracy Set B - Online Test Pilot",minutes:25,open:true,allow_retake:true,shuffle_items:true,shuffle_choices:false},
+  items:[{"id":"1","competency":"Money (reading and writing amounts)","question":"How do you write seventy-three pesos and nine centavos in figures?","options":{"A":"₱7.39","B":"₱73.09","C":"₱73.90","D":"₱739.00"},"answer":"B","explanation":"Seventy-three pesos is 73 and nine centavos is .09, so it is ₱73.09.","figure":null},{"id":"2","competency":"Place value","question":"What number is shown by the blocks in the box below?","options":{"A":"2,735","B":"2,746","C":"2,754","D":"2,764"},"answer":"D","explanation":"2 thousands + 7 hundreds + 6 tens + 4 ones = 2,764.","figure":{"type":"base_ten_blocks","params":{"thousands":2,"hundreds":7,"tens":6,"ones":4}}},{"id":"3","competency":"Patterns","question":"Look at the pattern below. What are the next three terms?","options":{"A":"R24, U28, X32","B":"Q24, S28, U32","C":"R25, U30, X35","D":"S24, V28, Y32"},"answer":"A","explanation":"The letters skip two (C, F, I, L, O, then R, U, X) and the numbers add 4 (20, then 24, 28, 32).","figure":{"type":"number_pattern","params":{"sequence":["C4","F8","I12","L16","O20",null,null,null]}}},{"id":"4","competency":"Rounding and estimation","question":"Aling Rosa sold 3,640 coconuts in May and 5,280 coconuts in June. Round each number to the nearest thousand, then add. About how many coconuts did she sell in all?","options":{"A":"8,000","B":"9,000","C":"10,000","D":"11,000"},"answer":"B","explanation":"3,640 rounds to 4,000 and 5,280 rounds to 5,000. 4,000 + 5,000 = 9,000.","figure":null},{"id":"5","competency":"Subtraction (money)","question":"A fishing net costs ₱3,450.00. Mario has ₱1,875.00. How much more money does he need to buy the net?","options":{"A":"₱1,575.00","B":"₱1,675.00","C":"₱2,425.00","D":"₱5,325.00"},"answer":"A","explanation":"₱3,450 - ₱1,875 = ₱1,575.","figure":null},{"id":"6","competency":"Multiplication","question":"A fisherman has 13 ropes. Each rope is 22 m long. How many meters of rope does he have in all?","options":{"A":"35 m","B":"88 m","C":"286 m","D":"2,860 m"},"answer":"C","explanation":"13 x 22 = 286 m.","figure":null},{"id":"7","competency":"Division","question":"What is the value of N in 72 ÷ 4 = N?","options":{"A":"18","B":"68","C":"76","D":"288"},"answer":"A","explanation":"72 / 4 = 18.","figure":null},{"id":"8","competency":"Place value (number discs)","question":"Which set of number discs shows 2,530?","options":{"A":"2,520","B":"2,530","C":"2,630","D":"3,530"},"answer":"B","explanation":"2,530 is 2 thousands, 5 hundreds and 3 tens, which is set B.","figure":{"type":"number_discs","params":{"target":2530,"options":{"A":{"d1000":2,"d100":5,"d10":2},"B":{"d1000":2,"d100":5,"d10":3},"C":{"d1000":2,"d100":6,"d10":3},"D":{"d1000":3,"d100":5,"d10":3}}}}},{"id":"9","competency":"Measurement (mass)","question":"A bag of dried fish weighs 6 kg. How many grams (g) is that?","options":{"A":"60 g","B":"600 g","C":"6,000 g","D":"60,000 g"},"answer":"C","explanation":"1 kg = 1,000 g, so 6 kg = 6,000 g.","figure":null},{"id":"10","competency":"Measurement (capacity)","question":"The water container below is full. How many milliliters (mL) of water does it hold?","options":{"A":"25 mL","B":"250 mL","C":"2,005 mL","D":"2,500 mL"},"answer":"D","explanation":"1 L = 1,000 mL, so 2.5 L = 2,500 mL.","figure":{"type":"container","params":{"liters":2.5,"label":"2.5 L"}}},{"id":"11","competency":"Addition (money, table)","question":"Nora buys both foods in the table below. How much does she pay in all?","options":{"A":"₱1,429.00","B":"₱4,011.00","C":"₱5,111.00","D":"₱5,121.00"},"answer":"D","explanation":"₱3,275 + ₱1,846 = ₱5,121.","figure":{"type":"table","params":{"header":["Food","Price"],"rows":[{"label":"Seafood platter","v":3275},{"label":"Grilled pork","v":1846}]}}},{"id":"12","competency":"Addition","question":"The school library has 256 storybooks, 348 science books, and 179 math books. How many books are there in all?","options":{"A":"604","B":"663","C":"783","D":"893"},"answer":"C","explanation":"256 + 348 + 179 = 783.","figure":null},{"id":"13","competency":"Subtraction","question":"A basket has 45 shells. There are 17 white shells and 14 brown shells. The rest are pink. How many shells are pink?","options":{"A":"14","B":"28","C":"31","D":"76"},"answer":"A","explanation":"17 + 14 = 31 shells are white or brown. 45 - 31 = 14 are pink.","figure":null},{"id":"14","competency":"Subtraction (comparison)","question":"On Monday, Ben practiced Arnis for 40 minutes and swam for 25 minutes. On Tuesday, he ran for 48 minutes. How many more minutes did Ben spend on Monday than on Tuesday?","options":{"A":"8","B":"17","C":"65","D":"113"},"answer":"B","explanation":"On Monday, 40 + 25 = 65 minutes. 65 - 48 = 17 more minutes.","figure":null},{"id":"15","competency":"Multiplication","question":"A nursery has 7 rows of kaimito seedlings. There are 8 seedlings in each row. How many seedlings are there in all?","options":{"A":"15","B":"49","C":"56","D":"63"},"answer":"C","explanation":"7 rows x 8 seedlings = 56.","figure":null},{"id":"16","competency":"Multi-step (multiply and add)","question":"Lani sells 5 baskets of lanzones at ₱300.00 each and 4 baskets of kaimito at ₱200.00 each. How much money does she get in all?","options":{"A":"₱500.00","B":"₱2,300.00","C":"₱2,700.00","D":"₱4,500.00"},"answer":"B","explanation":"5 x ₱300 = ₱1,500 and 4 x ₱200 = ₱800. ₱1,500 + ₱800 = ₱2,300.","figure":null},{"id":"17","competency":"Area","question":"A rectangular fish pond is 12 m wide and 25 m long. What is its area?","options":{"A":"37 m²","B":"74 m²","C":"300 m²","D":"3,000 m²"},"answer":"C","explanation":"Area = length x width = 25 x 12 = 300 m².","figure":null},{"id":"18","competency":"Area","question":"A rectangular wooden board is 70 cm long and 40 cm wide. What is its area?","options":{"A":"110 cm²","B":"220 cm²","C":"2,800 cm²","D":"28,000 cm²"},"answer":"C","explanation":"70 x 40 = 2,800 cm².","figure":null},{"id":"19","competency":"Data (bar graph)","question":"Look at the graph. Which seafood was sold the most?","options":{"A":"Tuna","B":"Crab","C":"Shrimp","D":"Bangus"},"answer":"A","explanation":"The longest bar is Tuna at 250 kilograms.","figure":{"type":"bar_graph","params":{"orientation":"horizontal","title":"Kilograms of Seafood Sold in One Day","axisLabel":"Kilograms","min":0,"max":300,"step":50,"data":[{"label":"Bangus","v":150},{"label":"Tuna","v":250},{"label":"Squid","v":100},{"label":"Crab","v":200},{"label":"Shrimp","v":50},{"label":"Lapu-lapu","v":200}]}}},{"id":"20","competency":"Time","question":"A cooking class lasted 150 minutes. How long is that in hours and minutes?","options":{"A":"1 hour and 30 minutes","B":"1 hour and 50 minutes","C":"2 hours and 5 minutes","D":"2 hours and 30 minutes"},"answer":"D","explanation":"150 minutes = 120 + 30 = 2 hours and 30 minutes.","figure":null}]
+};
+
+/* ---------- utilities ---------- */
+const $app = document.getElementById('app');
+const DEMO_MODE = !CONFIG.APPS_SCRIPT_URL;
+if (DEMO_MODE) document.getElementById('demoBanner').style.display = 'block';
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const SESSION_KEY = 'kabulig_pilot_session';
+const DEMO_RESP_KEY = 'kabulig_pilot_demo_responses';
+const fmt = s => { s=Math.max(0,Math.round(s)); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
+
+async function api(params){
+  const u = CONFIG.APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const r = await fetch(u); return r.json();
+}
+async function apiPost(body){
+  const r = await fetch(CONFIG.APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify(body)});
+  return r.json();
+}
+
+/* ---------- figure renderers (mula sa Numeracy Set B STUDENT file) ---------- */
+const FF='font-family="Arial,Helvetica,sans-serif"';
+function peso(n){return '₱'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2});}
+function svgW(w,h,t,inner,style){return `<svg class="fig" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(t)}" style="${style||''}"><title>${esc(t)}</title>${inner}</svg>`;}
+function figPattern(p){const s=p.sequence,n=s.length,bw=19,g=2,W=n*(bw+g)-g+2,H=22;let o='';
+s.forEach((t,i)=>{const x=1+i*(bw+g);o+=`<rect x="${x}" y="2" width="${bw}" height="18" fill="#fff" stroke="#000" stroke-width="0.7"/><text x="${x+bw/2}" y="14.5" font-size="7.5" font-weight="bold" text-anchor="middle" ${FF}>${t===null?'?':esc(t)}</text>`;});
+return svgW(W,H,'Pattern of letters and numbers with three missing terms',o);}
+function figBlocks(p){
+const S=[{n:p.thousands,per:3,pitch:21,k:'c'},{n:p.hundreds,per:4,pitch:13,k:'f'},{n:p.tens,per:10,pitch:5.5,k:'r'},{n:p.ones,per:5,pitch:5,k:'u'}];
+const GAP=9,PAD=6;let x=PAD,o='',maxH=0;
+S.forEach(s=>{const cols=Math.min(s.n,s.per),rows=Math.ceil(s.n/s.per),w=cols*s.pitch,rh={c:21,f:13,r:12.5,u:5}[s.k];maxH=Math.max(maxH,rows*rh);s.x=x;s.w=w;x+=w+GAP;});
+const W=x-GAP+PAD,top=6;
+S.forEach(s=>{for(let i=0;i<s.n;i++){const c=i%s.per,r=Math.floor(i/s.per),bx=s.x+c*s.pitch;
+if(s.k==='c'){const by=top+r*21;o+=`<rect x="${bx+3}" y="${by}" width="16" height="16" fill="#eee" stroke="#000" stroke-width="0.5"/><rect x="${bx}" y="${by+3}" width="16" height="16" fill="#bbb" stroke="#000" stroke-width="0.7"/>`;for(let j=1;j<4;j++){o+=`<line x1="${bx+j*4}" y1="${by+3}" x2="${bx+j*4}" y2="${by+19}" stroke="#555" stroke-width="0.25"/><line x1="${bx}" y1="${by+3+j*4}" x2="${bx+16}" y2="${by+3+j*4}" stroke="#555" stroke-width="0.25"/>`;}}
+else if(s.k==='f'){const by=top+r*13;o+=`<rect x="${bx}" y="${by}" width="11" height="11" fill="#ccc" stroke="#000" stroke-width="0.7"/>`;for(let j=1;j<5;j++){o+=`<line x1="${bx+j*2.2}" y1="${by}" x2="${bx+j*2.2}" y2="${by+11}" stroke="#555" stroke-width="0.2"/><line x1="${bx}" y1="${by+j*2.2}" x2="${bx+11}" y2="${by+j*2.2}" stroke="#555" stroke-width="0.2"/>`;}}
+else if(s.k==='r'){const by=top+r*12.5;o+=`<rect x="${bx}" y="${by}" width="3.5" height="11" fill="#ddd" stroke="#000" stroke-width="0.6"/>`;for(let j=1;j<5;j++)o+=`<line x1="${bx}" y1="${by+j*2.2}" x2="${bx+3.5}" y2="${by+j*2.2}" stroke="#555" stroke-width="0.2"/>`;}
+else{const by=top+r*5;o+=`<rect x="${bx}" y="${by}" width="3.5" height="3.5" fill="#999" stroke="#000" stroke-width="0.5"/>`;}}});
+const H=top+maxH+16;
+o=`<rect x="0.5" y="0.5" width="${W-1}" height="${H-1}" rx="3" fill="#fff" stroke="#000" stroke-width="1"/>`+o+`<text x="${W/2}" y="${H-5}" font-size="7" text-anchor="middle" ${FF}>cube = 1,000 | flat = 100 | rod = 10 | unit = 1</text>`;
+return svgW(W,H,'Base-ten blocks in a box',o);}
+function figContainer(p){let o=`<rect x="48" y="3" width="24" height="6" rx="1" fill="#fff" stroke="#000" stroke-width="1"/><rect x="52" y="9" width="16" height="8" fill="#fff" stroke="#000" stroke-width="1"/><rect x="28" y="17" width="64" height="58" rx="9" fill="#ddd" stroke="#000" stroke-width="1.4"/><path d="M92 28 q20 0 20 18 q0 16 -20 16" fill="none" stroke="#000" stroke-width="3"/><rect x="38" y="35" width="44" height="22" rx="2" fill="#fff" stroke="#000" stroke-width="0.9"/><text x="60" y="51" font-size="13" font-weight="bold" text-anchor="middle" ${FF}>${esc(p.label)}</text>`;
+return svgW(120,80,'Water container labeled '+p.label,o,'width:58%;margin:0 auto');}
+function figTable(p){const c1=105,c2=65,rh=14,W=c1+c2+2,n=p.rows.length+1,H=n*rh+2;
+let o=`<rect x="1" y="1" width="${c1+c2}" height="${n*rh}" fill="#fff" stroke="#000" stroke-width="1"/><rect x="1" y="1" width="${c1+c2}" height="${rh}" fill="#ddd" stroke="#000" stroke-width="1"/><line x1="${1+c1}" y1="1" x2="${1+c1}" y2="${1+n*rh}" stroke="#000" stroke-width="1"/>`;
+o+=`<text x="${1+c1/2}" y="${1+rh*0.7}" font-size="8.5" font-weight="bold" text-anchor="middle" ${FF}>${esc(p.header[0])}</text><text x="${1+c1+c2/2}" y="${1+rh*0.7}" font-size="8.5" font-weight="bold" text-anchor="middle" ${FF}>${esc(p.header[1])}</text>`;
+p.rows.forEach((r,i)=>{const y=1+(i+1)*rh;o+=`<line x1="1" y1="${y}" x2="${1+c1+c2}" y2="${y}" stroke="#000" stroke-width="0.8"/><text x="6" y="${y+rh*0.7}" font-size="8.5" ${FF}>${esc(r.label)}</text><text x="${c1+c2-5}" y="${y+rh*0.7}" font-size="8.5" text-anchor="end" ${FF}>${peso(r.v)}</text>`;});
+return svgW(W,H,'Table of foods and prices',o);}
+function figBar(p){const W=170,L=42,R=8,T=14,rh=13,n=p.data.length,pw=W-L-R,ticks=Math.round((p.max-p.min)/p.step),H=T+n*rh+22;
+const X=v=>L+(v-p.min)/(p.max-p.min)*pw;
+let o=`<text x="${W/2}" y="8.5" font-size="7.5" font-weight="bold" text-anchor="middle" ${FF}>${esc(p.title)}</text>`;
+for(let i=0;i<=ticks;i++){const v=p.min+i*p.step,x=X(v);o+=`<line x1="${x}" y1="${T}" x2="${x}" y2="${T+n*rh}" stroke="#777" stroke-width="0.4"/><text x="${x}" y="${T+n*rh+8}" font-size="7" text-anchor="middle" ${FF}>${v}</text>`;}
+for(let i=0;i<=n;i++)o+=`<line x1="${L}" y1="${T+i*rh}" x2="${L+pw}" y2="${T+i*rh}" stroke="#bbb" stroke-width="0.3"/>`;
+p.data.forEach((d,i)=>{const y=T+i*rh;o+=`<rect x="${L}" y="${y+2}" width="${X(d.v)-L}" height="${rh-4}" fill="#555" stroke="#000" stroke-width="0.4"/><text x="${L-3}" y="${y+rh*0.68}" font-size="7.5" text-anchor="end" ${FF}>${esc(d.label)}</text>`;});
+o+=`<line x1="${L}" y1="${T}" x2="${L}" y2="${T+n*rh}" stroke="#000" stroke-width="0.9"/><line x1="${L}" y1="${T+n*rh}" x2="${L+pw}" y2="${T+n*rh}" stroke="#000" stroke-width="0.9"/><text x="${L+pw/2}" y="${H-2}" font-size="7.5" text-anchor="middle" ${FF}>${esc(p.axisLabel)}</text>`;
+return svgW(W,H,p.title,o);}
+function discSVG(o){const list=[];[['d1000','1,000','#555','#fff'],['d100','100','#bbb','#000'],['d10','10','#fff','#000']].forEach(a=>{for(let i=0;i<o[a[0]];i++)list.push(a);});
+const per=9,pitch=8.4,r=3.6,rows=Math.max(1,Math.ceil(list.length/per)),W=per*pitch+1,H=rows*pitch+1;let s='';
+list.forEach((a,i)=>{const cx=1+r+(i%per)*pitch,cy=1+r+Math.floor(i/per)*pitch;s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${a[2]}" stroke="#000" stroke-width="0.5"/><text x="${cx}" y="${cy+0.95}" font-size="2.6" font-weight="bold" text-anchor="middle" fill="${a[3]}" ${FF}>${a[1]}</text>`;});
+return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Set of number discs" style="flex:1;min-width:0;height:auto"><title>Set of number discs</title>${s}</svg>`;}
+function drawFigure(fig){const p=fig.params;switch(fig.type){case 'number_pattern':return figPattern(p);case 'base_ten_blocks':return figBlocks(p);case 'container':return figContainer(p);case 'table':return figTable(p);case 'bar_graph':return figBar(p);default:return '';}}
+
+/* ---------- state ---------- */
+let TEST = null;               // {settings, items}
+let S = null;                  // session state
+let tick = null;
+
+function header(){
+  return `<div class="hero"><div class="brand"><div class="logo">K</div><div><b>PROJECT KABULIG</b><small>Developed by Sir Dyon</small></div></div></div>`;
+}
+function footer(){
+  return `<div class="foot">Project KABULIG · Developed by Sir Dyon<br><a onclick="goAdminLogin()">Para sa facilitator</a></div>`;
+}
+
+/* ---------- load test ---------- */
+async function loadTest(){
+  if (DEMO_MODE) { TEST = JSON.parse(JSON.stringify(DEMO)); return; }
+  const d = await api({action:'items'});
+  if (!d.ok) throw new Error(d.error||'Hindi ma-load ang test.');
+  TEST = {settings:d.settings, items:d.items};
+}
+
+/* ---------- 1. INTRO (instructions first) ---------- */
+async function viewIntro(){
+  clearInterval(tick);
+  $app.innerHTML = header()+`<div class="wrap"><div class="card"><div class="spin"></div><p class="lead" style="text-align:center">Nilo-load ang test...</p></div></div>`;
+  try{ await loadTest(); }
+  catch(e){
+    $app.innerHTML = header()+`<div class="wrap"><div class="card"><h2>Hindi ma-load ang test</h2><p class="lead">Suriin ang internet o signal, tapos subukan ulit.</p><div class="err">${esc(e.message)}</div><div class="row"><button class="btn primary" onclick="viewIntro()">Subukan ulit</button></div></div>${footer()}</div>`;
+    return;
+  }
+  const st = TEST.settings, n = TEST.items.length;
+  const saved = store.get(SESSION_KEY);
+  const canResume = saved && !saved.submitted && saved.deadline > Date.now() && saved.sig === sig();
+  $app.innerHTML = header()+`
+  <div class="wrap">
+    <div class="card">
+      <span class="tag">PANUTO</span>
+      <h1>${esc(st.title)}</h1>
+      <p class="lead">Basahin muna ang panuto bago magsimula.</p>
+      <div class="chips"><span class="chip">${n} na tanong</span><span class="chip">${st.minutes} minuto</span><span class="chip gold">Instant na puntos</span></div>
+      <ol class="steps">
+        <li><span>Ilagay ang iyong <b>pangalan</b>, paaralan o tanggapan, at distrito.</span></li>
+        <li><span>Basahin ang bawat tanong. Pumili ng <b>isang</b> pinakatamang sagot (A, B, C o D).</span></li>
+        <li><span>Puwede kang <b>bumalik at magpalit</b> ng sagot bago mag-submit. Gamitin ang mga numero sa ibaba para lumundag sa ibang tanong.</span></li>
+        <li><span>May <b>timer</b>. Kapag naubos ang oras, awtomatikong maisusumite ang mga sagot mo.</span></li>
+        <li><span>Pagkatapos mag-submit, makikita mo agad ang <b>puntos, tamang sagot at paliwanag</b>.</span></li>
+      </ol>
+      <div class="note"><b>Tandaan:</b> Pilot test ito at <b>low-stakes</b>. Layunin nitong maranasan ang online na pagsusulit at suriin ang kalidad ng mga tanong, hindi ang husgahan ka. Huwag magkopyahan para tama ang resulta ng pagsusuri. Gamitin ang sarili mong cellphone, may charge at may signal.</div>
+      <div class="row">
+        ${st.open?`<button class="btn primary" onclick="viewRegister()">Magsimula</button>`:`<button class="btn" disabled>Sarado na ang test</button>`}
+        ${canResume?`<button class="btn gold" onclick="resume()">Ituloy ang naunang sagot</button>`:''}
+      </div>
+    </div>${footer()}
+  </div>`;
+}
+function sig(){ return TEST ? TEST.items.map(i=>i.id).join('|') : ''; }
+
+/* ---------- 2. REGISTER ---------- */
+function viewRegister(){
+  $app.innerHTML = header()+`
+  <div class="wrap"><div class="card">
+    <span class="tag">IMPORMASYON</span>
+    <h1>Sino ka?</h1>
+    <p class="lead">Para maitala ang resulta mo.</p>
+    <label for="nm">Pangalan (Apelyido, Unang Pangalan)</label>
+    <input id="nm" type="text" autocomplete="name" placeholder="Hal. Dela Cruz, Juan">
+    <label for="sc">Paaralan o Tanggapan</label>
+    <input id="sc" type="text" placeholder="Hal. Alcantara Central School">
+    <label for="ds">Distrito</label>
+    <input id="ds" type="text" placeholder="Hal. Alcantara">
+    <div id="rerr" class="err"></div>
+    <div class="row"><button class="btn ghost" onclick="viewIntro()">Bumalik</button><button id="go" class="btn primary" onclick="startTest()">Simulan ang test</button></div>
+  </div>${footer()}</div>`;
+  setTimeout(()=>{const e=document.getElementById('nm'); if(e) e.focus();},50);
+}
+async function startTest(){
+  const name = document.getElementById('nm').value.trim().replace(/\s+/g,' ');
+  const school = document.getElementById('sc').value.trim();
+  const district = document.getElementById('ds').value.trim();
+  const err = document.getElementById('rerr');
+  if (name.length < 3){ err.textContent='Ilagay ang buong pangalan.'; return; }
+  if (!school){ err.textContent='Ilagay ang paaralan o tanggapan.'; return; }
+  const btn = document.getElementById('go'); btn.disabled = true; btn.textContent='Sandali lang...';
+  try{
+    if (!DEMO_MODE){
+      const c = await api({action:'check',name:name});
+      if (!c.ok) throw new Error(c.error||'May problema.');
+      if (c.exists){ err.textContent='Naisumite na ang pangalang ito. Kung may mali, lapitan ang facilitator.'; btn.disabled=false; btn.textContent='Simulan ang test'; return; }
+    }
+  }catch(e){ err.textContent='Hindi makakonekta: '+e.message; btn.disabled=false; btn.textContent='Simulan ang test'; return; }
+
+  const st = TEST.settings;
+  const ids = TEST.items.map(i=>i.id);
+  const order = st.shuffle_items ? shuffle(ids) : ids;
+  const choiceOrder = {};
+  TEST.items.forEach(i=>{ const ks=Object.keys(i.options); choiceOrder[i.id]= st.shuffle_choices ? shuffle(ks) : ks; });
+  S = {name,school,district,order,choiceOrder,answers:{},idx:0,start:Date.now(),deadline:Date.now()+st.minutes*60000,submitted:false,sig:sig()};
+  saveS(); viewTest();
+}
+function resume(){ S = store.get(SESSION_KEY); viewTest(); }
+function saveS(){ store.set(SESSION_KEY,S); }
+
+/* ---------- 3. TEST ---------- */
+function itemById(id){ return TEST.items.find(i=>i.id===id); }
+function viewTest(){
+  clearInterval(tick);
+  const total = S.order.length;
+  const it = itemById(S.order[S.idx]);
+  const sel = S.answers[it.id];
+  const answered = Object.keys(S.answers).length;
+  const last = S.idx === total-1;
+  $app.innerHTML = `
+  <div class="bar"><div class="bar-in"><div class="qcount">Tanong ${S.idx+1} / ${total}</div><div id="tm" class="timer">--:--</div></div><div class="prog"><i style="width:${(answered/total)*100}%"></i></div></div>
+  <div style="max-width:760px;margin:16px auto 40px;padding:0 14px">
+    <div class="card">
+      ${it.competency?`<span class="tag">${esc(it.competency)}</span>`:''}
+      <div class="q">${esc(it.question)}</div>
+      ${it.image?`<img class="qimg" src="${esc(it.image)}" alt="Larawan ng tanong">`:''}
+      ${it.figure&&it.figure.type!=='number_discs'&&drawFigure(it.figure)?`<div class="figwrap">${drawFigure(it.figure)}</div>`:''}
+      <div class="choices">
+        ${S.choiceOrder[it.id].map((k,pos)=>`<button class="choice ${sel===k?'sel':''}" onclick="pick('${k}')"><span class="b">${'ABCD'[pos]}</span>${it.figure&&it.figure.type==='number_discs'?`<span style="flex:1;min-width:0">${discSVG(it.figure.params.options[k])}</span>`:`<span>${esc(it.options[k])}</span>`}</button>`).join('')}
+      </div>
+      <div class="nav">
+        <button class="btn ghost" ${S.idx===0?'disabled':''} onclick="go(-1)">&larr; Nakaraan</button>
+        ${last?`<button class="btn gold" onclick="confirmSubmit()">Isumite</button>`:`<button class="btn primary" onclick="go(1)">Susunod &rarr;</button>`}
+      </div>
+    </div>
+    <div class="card"><h2>Mga tanong (${answered} sa ${total} ang nasagot)</h2>
+      <div class="dots">${S.order.map((id,i)=>`<button class="dot ${S.answers[id]?'done':''} ${i===S.idx?'cur':''}" onclick="jump(${i})">${i+1}</button>`).join('')}</div>
+      <div class="row"><button class="btn gold block" onclick="confirmSubmit()">Isumite ang mga sagot</button></div>
+    </div>
+  </div>`;
+  const upd = ()=>{
+    const left = (S.deadline-Date.now())/1000;
+    const el = document.getElementById('tm'); if(!el) return;
+    el.textContent = fmt(left); el.classList.toggle('low', left<=60);
+    if (left<=0){ clearInterval(tick); submit(true); }
+  };
+  upd(); tick = setInterval(upd,500);
+}
+function pick(k){ const it=itemById(S.order[S.idx]); S.answers[it.id]=k; saveS(); viewTest(); }
+function go(d){ S.idx=Math.min(S.order.length-1,Math.max(0,S.idx+d)); saveS(); viewTest(); }
+function jump(i){ S.idx=i; saveS(); viewTest(); window.scrollTo(0,0); }
+function confirmSubmit(){
+  const un = S.order.length - Object.keys(S.answers).length;
+  const m = document.createElement('div'); m.className='modal'; m.id='modal';
+  m.innerHTML = `<div class="box"><h2>Isumite na ba?</h2><p class="lead">${un>0?`May <b>${un}</b> na hindi pa nasasagot. `:'Nasagot mo na lahat. '}Kapag naisumite na, hindi na ito mababago.</p><div class="row"><button class="btn ghost" onclick="document.getElementById('modal').remove()">Balik sa test</button><button class="btn primary" onclick="document.getElementById('modal').remove();submit(false)">Oo, isumite</button></div></div>`;
+  document.body.appendChild(m);
+}
+
+/* ---------- 4. SUBMIT + RESULT ---------- */
+async function submit(auto){
+  clearInterval(tick);
+  const used = Math.min((Date.now()-S.start)/1000, TEST.settings.minutes*60);
+  $app.innerHTML = header()+`<div class="wrap"><div class="card"><div class="spin"></div><p class="lead" style="text-align:center">${auto?'Tapos na ang oras. ':''}Isinusumite ang mga sagot mo...</p></div></div>`;
+  const payload = {action:'submit',name:S.name,school:S.school,district:S.district,seconds:Math.round(used),answers:S.answers};
+  try{
+    let res;
+    if (DEMO_MODE) res = demoSubmit(payload); else res = await apiPost(payload);
+    if (!res.ok) throw new Error(res.error||'Hindi naisumite.');
+    S.submitted = true; saveS(); store.del(SESSION_KEY);
+    viewResult(res, Math.round(used));
+  }catch(e){
+    $app.innerHTML = header()+`<div class="wrap"><div class="card"><h2>Hindi pa naisumite</h2><p class="lead">Ligtas ang mga sagot mo sa telepono. Kumonekta sa internet at pindutin ang Subukan ulit.</p><div class="err">${esc(e.message)}</div><div class="row"><button class="btn primary" onclick="submit(false)">Subukan ulit</button></div></div></div>`;
+  }
+}
+function demoSubmit(p){
+  const list = store.get(DEMO_RESP_KEY)||[];
+  let score=0; const answers={};
+  const review = TEST.items.map(it=>{ const ch=(p.answers[it.id]||'').toUpperCase(); const ok=ch===it.answer; if(ok)score++; answers[it.id]=ch; return {id:it.id,chosen:ch,answer:it.answer,correct:ok,explanation:it.explanation}; });
+  const total=TEST.items.length, percent=Math.round(score/total*1000)/10;
+  list.push({time:new Date().toISOString(),name:p.name,school:p.school,district:p.district,score,total,percent,seconds:p.seconds,answers});
+  store.set(DEMO_RESP_KEY,list);
+  return {ok:true,score,total,percent,review};
+}
+function viewResult(res, secs){
+  const pct = res.percent, C = 2*Math.PI*54, off = C*(1-pct/100);
+  const msg = pct>=90?'Napakahusay!':pct>=75?'Magaling!':pct>=50?'Mabuti, may espasyo pang umunlad.':'Salamat sa pagsubok! Balikan natin ang mga tanong.';
+  $app.innerHTML = header()+`
+  <div class="wrap">
+    <div class="card">
+      <span class="tag">NAISUMITE NA</span>
+      <div class="score">
+        <div class="ring"><svg width="130" height="130" viewBox="0 0 130 130"><circle cx="65" cy="65" r="54" fill="none" stroke="#e2e9f2" stroke-width="12"/><circle cx="65" cy="65" r="54" fill="none" stroke="#0fa3a3" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"/></svg><span>${res.score}/${res.total}</span></div>
+        <div><h1>${pct}%</h1><p class="lead">${msg}</p><p class="lead">Oras na ginamit: ${fmt(secs)}</p></div>
+      </div>
+      <div class="note" style="background:#eaf4fb;border-color:var(--blue);color:#0b3a5a">Salamat sa pakikilahok. Hintayin ang talakayan ng facilitator tungkol sa mga tanong.</div>
+    </div>
+    <div class="card"><h2>Review ng mga sagot</h2>
+      ${res.review.map((r,i)=>{
+        const it = itemById(r.id)||{question:'',options:{}};
+        const ch = r.chosen? `${r.chosen}. ${esc(it.options[r.chosen]||'')}`:'Walang sagot';
+        const an = `${r.answer}. ${esc(it.options[r.answer]||'')}`;
+        return `<div class="rv"><span class="pill ${!r.chosen?'skip':r.correct?'ok':'bad'}">${!r.chosen?'Walang sagot':r.correct?'Tama':'Mali'}</span><span class="pill" style="background:#eef3f9;color:#34506b">Tanong ${esc(r.id)}</span>
+        <div class="qq" style="margin-top:8px">${esc(it.question)}</div>${it.figure&&it.figure.type!=='number_discs'&&drawFigure(it.figure)?`<div class="figwrap" style="max-width:320px">${drawFigure(it.figure)}</div>`:''}
+        <div class="ans">Sagot mo: <b>${ch}</b></div>${r.correct?'':`<div class="ans">Tamang sagot: <b style="color:var(--green)">${an}</b></div>`}
+        ${r.explanation?`<div class="expl">${esc(r.explanation)}</div>`:''}</div>`;}).join('')}
+    </div>${footer()}
+  </div>`;
+  window.scrollTo(0,0);
+}
+
+/* ---------- 5. ADMIN ---------- */
+function goAdminLogin(){
+  clearInterval(tick);
+  const k = sessionStorage.getItem('kabulig_admin_key');
+  if (k) return loadAdmin(k);
+  $app.innerHTML = header()+`<div class="wrap"><div class="card"><span class="tag">FACILITATOR</span><h1>Dashboard ng Item Analysis</h1><p class="lead">Ilagay ang admin key.</p>
+  <label for="ak">Admin key</label><input id="ak" type="password" onkeydown="if(event.key==='Enter')adminLogin()"><div id="aerr" class="err"></div>
+  <div class="row"><button class="btn ghost" onclick="viewIntro()">Bumalik</button><button class="btn primary" onclick="adminLogin()">Pumasok</button></div></div></div>`;
+}
+function adminLogin(){ const k=document.getElementById('ak').value; if(k) loadAdmin(k); }
+async function loadAdmin(key){
+  $app.innerHTML = header()+`<div class="wrap"><div class="card"><div class="spin"></div><p class="lead" style="text-align:center">Kinukuha ang mga resulta...</p></div></div>`;
+  try{
+    let d;
+    if (DEMO_MODE){
+      if (key !== CONFIG.DEMO_ADMIN_KEY) throw new Error('Maling key.');
+      d = {ok:true,settings:DEMO.settings,items:DEMO.items,responses:store.get(DEMO_RESP_KEY)||[]};
+    } else {
+      d = await api({action:'admin',key:key});
+      if (!d.ok) throw new Error(d.error||'Hindi makapasok.');
+    }
+    sessionStorage.setItem('kabulig_admin_key',key);
+    viewAdmin(d);
+  }catch(e){
+    sessionStorage.removeItem('kabulig_admin_key');
+    goAdminLogin();
+    const el=document.getElementById('aerr'); if(el) el.textContent=e.message;
+  }
+}
+function analyze(items, resp){
+  const n = resp.length;
+  const sorted = resp.slice().sort((a,b)=>b.score-a.score);
+  const g = Math.max(1, Math.round(n*0.27));
+  const up = sorted.slice(0,g), lo = sorted.slice(n-g);
+  const out = items.map(it=>{
+    const counts = {A:0,B:0,C:0,D:0,blank:0}; let right=0;
+    resp.forEach(r=>{ const a=(r.answers||{})[it.id]; if(!a) counts.blank++; else { counts[a]=(counts[a]||0)+1; if(a===it.answer) right++; } });
+    const p = n? right/n : null;
+    let D = null;
+    if (n>=6){ const pu = up.filter(r=>(r.answers||{})[it.id]===it.answer).length/g; const pl = lo.filter(r=>(r.answers||{})[it.id]===it.answer).length/g; D = pu-pl; }
+    const flags=[];
+    if (p!=null){ if(p<0.30)flags.push(['r','Napakahirap (p < 0.30)']); else if(p>0.90)flags.push(['w','Napakadali (p > 0.90)']); else flags.push(['g','Katanggap-tanggap ang hirap']); }
+    if (D!=null){ if(D<0)flags.push(['r','Negatibo ang discrimination: suriin ang susi o kalituhan']); else if(D<0.2)flags.push(['w','Mahina ang discrimination (D < 0.20)']); else flags.push(['g','Mahusay ang discrimination']); }
+    Object.keys(it.options).forEach(k=>{ if(k!==it.answer && it.options[k] && n>=6 && counts[k]===0) flags.push(['w','Walang pumili sa '+k+' (mahinang distractor)']); });
+    return {it,counts,right,p,D,flags};
+  });
+  return out;
+}
+function viewAdmin(d){
+  const resp = d.responses||[], items = d.items||[], n = resp.length;
+  const A = analyze(items, resp);
+  const mean = n? resp.reduce((s,r)=>s+r.percent,0)/n : 0;
+  const hi = n? Math.max(...resp.map(r=>r.percent)) : 0, lo = n? Math.min(...resp.map(r=>r.percent)) : 0;
+  const avgT = n? resp.reduce((s,r)=>s+r.seconds,0)/n : 0;
+  const bins = Array(10).fill(0); resp.forEach(r=>{ bins[Math.min(9,Math.floor(r.percent/10))]++; });
+  const mx = Math.max(1,...bins);
+  const hardest = A.filter(a=>a.p!=null).sort((a,b)=>a.p-b.p)[0];
+  $app.innerHTML = header()+`
+  <div class="wrap">
+    <div class="card">
+      <span class="tag">FACILITATOR</span>
+      <h1>Item Analysis</h1><p class="lead">${esc(d.settings.title)}</p>
+      <div class="row"><button class="btn primary" onclick="loadAdmin(sessionStorage.getItem('kabulig_admin_key'))">I-refresh</button><button class="btn ghost" onclick="exportCSV()">I-download (CSV)</button><button class="btn ghost" onclick="sessionStorage.removeItem('kabulig_admin_key');viewIntro()">Lumabas</button></div>
+    </div>
+    <div class="card"><h2>Buod</h2>
+      <div class="kpis">
+        <div class="kpi"><b>${n}</b><span>Kumuha ng test</span></div>
+        <div class="kpi"><b>${mean.toFixed(1)}%</b><span>Karaniwang puntos</span></div>
+        <div class="kpi"><b>${hi}% / ${lo}%</b><span>Pinakamataas / pinakamababa</span></div>
+        <div class="kpi"><b>${fmt(avgT)}</b><span>Karaniwang oras</span></div>
+      </div>
+      ${hardest?`<div class="note" style="background:#eaf4fb;border-color:var(--blue);color:#0b3a5a">Pinakamahirap na tanong: <b>#${esc(hardest.it.id)}</b> (${esc(hardest.it.competency||'')}), ${(hardest.p*100).toFixed(0)}% lang ang tama.</div>`:''}
+      <h2 style="margin-top:18px">Distribusyon ng puntos</h2>
+      <div class="hist">${bins.map(b=>`<div style="height:${(b/mx)*100}%">${b?`<em>${b}</em>`:''}</div>`).join('')}</div>
+      <div class="hlab">${bins.map((_,i)=>`<span>${i*10}${i===9?'-100':''}</span>`).join('')}</div>
+    </div>
+    <div class="card"><h2>Bawat tanong</h2>
+      <p class="lead">p = proporsyon ng tama (hirap). D = pagkakaiba ng upper at lower 27% (discrimination${n<6?'; lalabas kapag 6 o higit ang kumuha':''}).</p>
+      ${A.map(a=>{
+        const col = a.p==null?'#b8c8da': a.p<0.3?'var(--coral)': a.p>0.9?'var(--gold)':'var(--green)';
+        const ks = Object.keys(a.it.options).filter(k=>a.it.options[k]);
+        return `<div class="it"><h3>#${esc(a.it.id)} · ${esc(a.it.competency||'')}<br><span style="font-weight:500">${esc(a.it.question)}</span></h3>
+          <div class="meter"><i style="width:${a.p==null?0:a.p*100}%;background:${col}"></i></div>
+          <div class="stats"><span>p = <b>${a.p==null?'-':a.p.toFixed(2)}</b></span><span>D = <b>${a.D==null?'-':a.D.toFixed(2)}</b></span><span>Tama: <b>${a.right}/${n}</b></span><span>Susi: <b>${esc(a.it.answer)}</b></span></div>
+          <div>${a.flags.map(f=>`<span class="flag ${f[0]}">${esc(f[1])}</span>`).join('')}</div>
+          <div class="dist">${ks.map(k=>`<div class="${k===a.it.answer?'ok':''}"><span class="l">${k}</span><span class="t"><i style="width:${n?(a.counts[k]||0)/n*100:0}%"></i></span><span class="n">${a.counts[k]||0} (${n?Math.round((a.counts[k]||0)/n*100):0}%)</span></div>`).join('')}${a.counts.blank?`<div><span class="l">-</span><span class="t"><i style="width:${a.counts.blank/n*100}%"></i></span><span class="n">${a.counts.blank} blangko</span></div>`:''}</div>
+        </div>`;}).join('')}
+    </div>${footer()}
+  </div>`;
+  window.__adminData = d;
+}
+function exportCSV(){
+  const d = window.__adminData; if(!d) return;
+  const q = s => '"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const head = ['Name','School','District','Score','Total','Percent','Seconds'].concat(d.items.map(i=>'Item '+i.id));
+  const rows = d.responses.map(r=>[r.name,r.school,r.district,r.score,r.total,r.percent,r.seconds].concat(d.items.map(i=>(r.answers||{})[i.id]===i.answer?1:0)));
+  const csv = [head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download = 'pilot_test_results.csv'; a.click();
+}
+
+/* ---------- start ---------- */
+if (location.hash === '#admin') goAdminLogin(); else viewIntro();
+</script>
+</body>
+</html>
