@@ -93,6 +93,9 @@ input:focus{border-color:var(--teal);background:#fff}
 .expl{font-size:13px;color:var(--muted);margin-top:6px;background:#f6f9fc;padding:10px 12px;border-radius:12px}
 
 /* admin */
+.iconbtn{display:inline-flex;align-items:center;gap:6px;border:0;background:#eef3f9;color:var(--navy);font:inherit;font-weight:700;font-size:13px;padding:7px 12px;border-radius:999px;cursor:pointer}
+.iconbtn:active{transform:scale(.96)}
+.brand.home{cursor:pointer}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
 .kpi{background:linear-gradient(135deg,#f4fafc,#eaf4fb);border-radius:16px;padding:14px}
 .kpi b{display:block;font-size:24px;color:var(--navy);font-weight:800}
@@ -217,7 +220,7 @@ let S = null;                  // session state
 let tick = null;
 
 function header(){
-  return `<div class="hero"><div class="brand"><div class="logo">K</div><div><b>PROJECT KABULIG</b><small>Developed by Sir Dyon</small></div></div></div>`;
+  return `<div class="hero"><div class="brand home" onclick="goHome()" title="Bumalik sa simula"><div class="logo">K</div><div><b>PROJECT KABULIG</b><small>Developed by Sir Dyon</small></div></div></div>`;
 }
 function footer(){
   return `<div class="foot">Project KABULIG · Developed by Sir Dyon<br><a onclick="goAdminLogin()">Para sa facilitator</a></div>`;
@@ -330,6 +333,16 @@ function dupWarn(){
   m.innerHTML='<div class="box"><h2>Naisumite na ang pangalang ito</h2><p class="lead">May resulta na para sa pangalang ito. Kung may mali, lapitan ang facilitator.</p><div class="row"><button class="btn primary" onclick="document.getElementById(\'modal\').remove();viewIntro()">Sige</button></div></div>';
   document.body.appendChild(m);
 }
+function goHome(){
+  if (VIEW==='test' && S && !S.submitted) return confirmExit();
+  viewIntro();
+}
+function confirmExit(){
+  if (document.getElementById('modal')) return;
+  const m=document.createElement('div'); m.className='modal'; m.id='modal';
+  m.innerHTML='<div class="box"><h2>Lumabas sa test?</h2><p class="lead">Mase-save ang mga sagot mo at makakabalik ka gamit ang <b>Ituloy ang naunang sagot</b>. <b>Tuloy pa rin ang timer</b> habang wala ka.</p><div class="row"><button class="btn ghost" onclick="document.getElementById(\'modal\').remove()">Ituloy ang test</button><button class="btn primary" onclick="document.getElementById(\'modal\').remove();saveS();viewIntro()">Lumabas</button></div></div>';
+  document.body.appendChild(m);
+}
 function resume(){ S = store.get(SESSION_KEY); viewTest(); }
 function saveS(){ store.set(SESSION_KEY,S); }
 
@@ -344,7 +357,7 @@ function viewTest(){
   const answered = Object.keys(S.answers).length;
   const last = S.idx === total-1;
   $app.innerHTML = `
-  <div class="bar"><div class="bar-in"><div class="qcount">Tanong ${S.idx+1} / ${total}</div><div id="tm" class="timer">--:--</div></div><div class="prog"><i style="width:${(answered/total)*100}%"></i></div></div>
+  <div class="bar"><div class="bar-in"><button class="iconbtn" onclick="confirmExit()" aria-label="Lumabas">&#10005; Lumabas</button><div class="qcount">Tanong ${S.idx+1} / ${total}</div><div id="tm" class="timer">--:--</div></div><div class="prog"><i style="width:${(answered/total)*100}%"></i></div></div>
   <div style="max-width:760px;margin:16px auto 40px;padding:0 14px">
     <div class="card">
       ${it.competency?`<span class="tag">${esc(it.competency)}</span>`:''}
@@ -419,6 +432,7 @@ function viewResult(res, secs){
         <div><h1>${pct}%</h1><p class="lead">${msg}</p><p class="lead">Oras na ginamit: ${fmt(secs)}</p></div>
       </div>
       <div class="note" style="background:#eaf4fb;border-color:var(--blue);color:#0b3a5a">Salamat sa pakikilahok. Hintayin ang talakayan ng facilitator tungkol sa mga tanong.</div>
+      <div class="row"><button class="btn primary" onclick="viewIntro()">&#8962; Bumalik sa simula</button></div>
     </div>
     <div class="card"><h2>Review ng mga sagot</h2>
       ${res.review.map((r,i)=>{
